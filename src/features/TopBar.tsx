@@ -3,7 +3,7 @@ import { useOS } from "@/store/os";
 import { Activity, Cpu, Wifi, Volume2 } from "lucide-react";
 
 export function TopBar() {
-  const { workspaces, currentWs, focusApp, toggleLauncher, config, switchWorkspace } = useOS();
+  const { workspaces, currentWs, focusApp, toggleLauncher, config } = useOS();
   const ws = workspaces[currentWs];
   const openApps = ws.openApps;
   const activeApp = ws.activeApp;
