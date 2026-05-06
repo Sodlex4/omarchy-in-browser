@@ -1,4 +1,6 @@
-import { useOS } from "@/store/os";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { useOS, WORKSPACE_IDS, type WorkspaceId } from "@/store/os";
 import { TopBar } from "./TopBar";
 import { Launcher } from "./Launcher";
 import { Terminal } from "./Terminal";
@@ -15,33 +17,82 @@ const dock = [
 ];
 
 export function Desktop() {
-  const { openApps, openApp, toggleLauncher, config } = useOS();
+  const { workspaces, currentWs, lastWsDirection, openApp, toggleLauncher, switchWorkspace, config } = useOS();
   const accentVar = `var(--neon-${config.accent})`;
+  const ws = workspaces[currentWs];
+  const openApps = ws.openApps;
+
+  const stageRef = useRef<HTMLDivElement>(null);
+  const prevWsRef = useRef<WorkspaceId>(currentWs);
+
+  useEffect(() => {
+    if (prevWsRef.current === currentWs || !stageRef.current) {
+      prevWsRef.current = currentWs;
+      return;
+    }
+    const dir = lastWsDirection;
+    const tl = gsap.timeline();
+    tl.fromTo(
+      stageRef.current,
+      { x: dir * 60, opacity: 0, filter: "blur(12px)", scale: 0.98 },
+      { x: 0, opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.45, ease: "power3.out" }
+    );
+    prevWsRef.current = currentWs;
+  }, [currentWs, lastWsDirection]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-hero">
       <TopBar />
-      <div className="flex-1 relative bg-grid">
-        {/* Idle wallpaper */}
-        {openApps.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none animate-float">
-            <div className="text-7xl md:text-9xl font-bold tracking-tighter" style={{ color: accentVar, textShadow: `0 0 40px ${accentVar}` }}>
-              myomarchy
+      <div className="flex-1 relative bg-grid overflow-hidden">
+        <div ref={stageRef} key={currentWs} className="absolute inset-0">
+          {openApps.length === 0 && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none animate-float">
+              <div className="text-[10vw] md:text-9xl font-bold tracking-tighter leading-none" style={{ color: accentVar, textShadow: `0 0 40px ${accentVar}` }}>
+                myomarchy
+              </div>
+              <div className="mt-3 text-xs text-muted-foreground">
+                workspace <span className="text-foreground">{currentWs}</span> · empty
+              </div>
+              <div className="mt-4 text-xs text-muted-foreground">
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">1-5</kbd> switch ws ·
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">D</kbd> launcher ·
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">↵</kbd> terminal
+              </div>
             </div>
-            <div className="mt-4 text-sm text-muted-foreground">
-              press <kbd className="px-1.5 py-0.5 text-xs rounded bg-secondary border border-border mx-1">Alt</kbd>+<kbd className="px-1.5 py-0.5 text-xs rounded bg-secondary border border-border mx-1">D</kbd> for launcher · <kbd className="px-1.5 py-0.5 text-xs rounded bg-secondary border border-border mx-1">Alt</kbd>+<kbd className="px-1.5 py-0.5 text-xs rounded bg-secondary border border-border mx-1">↵</kbd> for terminal
-            </div>
-          </div>
-        )}
+          )}
 
-        {openApps.includes("terminal") && <Terminal />}
-        {openApps.includes("keybindings") && <Keybindings />}
-        {openApps.includes("config") && <ConfigLab />}
-        {openApps.includes("install") && <InstallGuide />}
+          {openApps.includes("terminal") && <Terminal />}
+          {openApps.includes("keybindings") && <Keybindings />}
+          {openApps.includes("config") && <ConfigLab />}
+          {openApps.includes("install") && <InstallGuide />}
+        </div>
       </div>
 
       {/* Dock */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
+        <div className="flex items-center gap-1 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
+          {WORKSPACE_IDS.map((id) => {
+            const populated = workspaces[id].openApps.length > 0;
+            const active = id === currentWs;
+            return (
+              <button
+                key={id}
+                onClick={() => switchWorkspace(id)}
+                className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all"
+                style={{
+                  borderColor: active ? accentVar : "var(--border)",
+                  color: active ? accentVar : populated ? "var(--foreground)" : "var(--muted-foreground)",
+                  background: active ? `color-mix(in oklab, ${accentVar} 18%, transparent)` : populated ? "var(--secondary)" : "transparent",
+                  boxShadow: active ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)` : undefined,
+                }}
+                title={`workspace ${id}`}
+              >
+                {id}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
           <button
             onClick={toggleLauncher}
