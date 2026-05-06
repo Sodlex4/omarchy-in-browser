@@ -1,20 +1,65 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { useOS, type AppId } from "@/store/os";
-import { Terminal as TermIcon, Keyboard, SlidersHorizontal, Download, Folder } from "lucide-react";
+import { useOS } from "@/store/os";
+import {
+  Terminal as TermIcon,
+  Keyboard,
+  SlidersHorizontal,
+  Download,
+  Terminal as TmuxIcon,
+} from "lucide-react";
 
-const apps: { id: AppId; name: string; desc: string; icon: any; color: string }[] = [
-  { id: "terminal", name: "Terminal", desc: "jsh shell", icon: TermIcon, color: "var(--neon-green)" },
-  { id: "keybindings", name: "Keybindings", desc: "Visualizer", icon: Keyboard, color: "var(--neon-blue)" },
-  { id: "config", name: "Config Lab", desc: "~/.config", icon: SlidersHorizontal, color: "var(--neon-purple)" },
-  { id: "install", name: "Install Guide", desc: "Bootstrap", icon: Download, color: "var(--neon-pink)" },
-  { id: "files", name: "Files", desc: "Browser", icon: Folder, color: "var(--neon-blue)" },
+const apps: {
+  id: "terminal" | "keybindings" | "config" | "install" | "tmux-cheatsheet";
+  name: string;
+  desc: string;
+  icon: any;
+  color: string;
+}[] = [
+  {
+    id: "terminal",
+    name: "Terminal",
+    desc: "jsh shell",
+    icon: TermIcon,
+    color: "var(--neon-green)",
+  },
+  {
+    id: "keybindings",
+    name: "Keybindings",
+    desc: "Visualizer",
+    icon: Keyboard,
+    color: "var(--neon-blue)",
+  },
+  {
+    id: "config",
+    name: "Config Lab",
+    desc: "~/.config",
+    icon: SlidersHorizontal,
+    color: "var(--neon-purple)",
+  },
+  {
+    id: "install",
+    name: "Install Guide",
+    desc: "Bootstrap",
+    icon: Download,
+    color: "var(--neon-pink)",
+  },
+  {
+    id: "tmux-cheatsheet",
+    name: "Tmux Cheatsheet",
+    desc: "Prefix key bindings",
+    icon: TmuxIcon,
+    color: "var(--neon-green)",
+  },
 ];
 
 export function Launcher() {
-  const { launcherOpen, toggleLauncher, openApp } = useOS();
+  const launcherOpen = useOS((s) => s.launcherOpen);
+  const toggleLauncher = useOS((s) => s.toggleLauncher);
+  const openApp = useOS((s) => s.openApp);
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
+  const idxRef = useRef(0);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -22,12 +67,14 @@ export function Launcher() {
 
   useEffect(() => {
     if (!launcherOpen) return;
-    setQ(""); setIdx(0);
+    setQ("");
+    setIdx(0);
+    idxRef.current = 0;
     requestAnimationFrame(() => inputRef.current?.focus());
     gsap.fromTo(
       ref.current,
       { opacity: 0, y: -10, scale: 0.96, filter: "blur(8px)" },
-      { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.25, ease: "power3.out" }
+      { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.25, ease: "power3.out" },
     );
   }, [launcherOpen]);
 
@@ -35,18 +82,35 @@ export function Launcher() {
     if (!launcherOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") toggleLauncher();
-      if (e.key === "ArrowDown") { e.preventDefault(); setIdx((i) => Math.min(filtered.length - 1, i + 1)); }
-      if (e.key === "ArrowUp") { e.preventDefault(); setIdx((i) => Math.max(0, i - 1)); }
-      if (e.key === "Enter") { e.preventDefault(); const a = filtered[idx]; if (a) openApp(a.id === "files" ? "terminal" : a.id); }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const n = Math.min(filtered.length - 1, idxRef.current + 1);
+        setIdx(n);
+        idxRef.current = n;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const n = Math.max(0, idxRef.current - 1);
+        setIdx(n);
+        idxRef.current = n;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const a = filtered[idxRef.current];
+        if (a) openApp(a.id);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [launcherOpen, filtered, idx, openApp, toggleLauncher]);
+  }, [launcherOpen, filtered, openApp, toggleLauncher]);
 
   if (!launcherOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center pt-24 px-4" onClick={toggleLauncher}>
+    <div
+      className="fixed inset-0 z-40 flex items-start justify-center pt-24 px-4"
+      onClick={toggleLauncher}
+    >
       <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
       <div
         ref={ref}
@@ -58,11 +122,16 @@ export function Launcher() {
           <input
             ref={inputRef}
             value={q}
-            onChange={(e) => { setQ(e.target.value); setIdx(0); }}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setIdx(0);
+            }}
             placeholder="search apps..."
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
           />
-          <kbd className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5 rounded">esc</kbd>
+          <kbd className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5 rounded">
+            esc
+          </kbd>
         </div>
         <div className="p-2 max-h-80 overflow-y-auto">
           {filtered.map((a, i) => {
@@ -72,12 +141,18 @@ export function Launcher() {
               <button
                 key={a.id}
                 onMouseEnter={() => setIdx(i)}
-                onClick={() => openApp(a.id === "files" ? "terminal" : a.id)}
+                onClick={() => openApp(a.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${active ? "bg-secondary" : ""}`}
               >
                 <div
                   className="h-9 w-9 rounded-md flex items-center justify-center border border-border"
-                  style={{ background: `color-mix(in oklab, ${a.color} 12%, transparent)`, color: a.color, boxShadow: active ? `0 0 16px color-mix(in oklab, ${a.color} 50%, transparent)` : undefined }}
+                  style={{
+                    background: `color-mix(in oklab, ${a.color} 12%, transparent)`,
+                    color: a.color,
+                    boxShadow: active
+                      ? `0 0 16px color-mix(in oklab, ${a.color} 50%, transparent)`
+                      : undefined,
+                  }}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
@@ -89,7 +164,9 @@ export function Launcher() {
               </button>
             );
           })}
-          {!filtered.length && <div className="text-center text-sm text-muted-foreground py-8">no results</div>}
+          {!filtered.length && (
+            <div className="text-center text-sm text-muted-foreground py-8">no results</div>
+          )}
         </div>
       </div>
     </div>

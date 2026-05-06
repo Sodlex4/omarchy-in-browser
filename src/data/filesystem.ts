@@ -9,22 +9,40 @@ export const fs: FsNode = {
         projects: {
           type: "dir",
           children: {
-            "myomarchy": { type: "dir", children: {
-              "README.md": { type: "file", content: "# MyOmarchy\nA browser-based Omarchy simulation." },
-              "src": { type: "dir", children: {} },
-            }},
-            "dotfiles": { type: "dir", children: {
-              "hyprland.conf": { type: "file", content: "monitor=,preferred,auto,1\nbind=SUPER,Return,exec,alacritty" },
-            }},
+            omarchy: {
+              type: "dir",
+              children: {
+                "README.md": {
+                  type: "file",
+                  content: "# Omarchy\nA browser-based Omarchy simulation.",
+                },
+                src: { type: "dir", children: {} },
+              },
+            },
+            dotfiles: {
+              type: "dir",
+              children: {
+                "hyprland.conf": {
+                  type: "file",
+                  content: "monitor=,preferred,auto,1\nbind=SUPER,Return,exec,alacritty",
+                },
+              },
+            },
           },
         },
-        "config": {
+        config: {
           type: "dir",
           children: {
-            "omarchy.toml": { type: "file", content: "theme = \"tokyo-night\"\nfont = \"JetBrains Mono\"" },
+            "omarchy.toml": {
+              type: "file",
+              content: 'theme = "tokyo-night"\nfont = "JetBrains Mono"',
+            },
           },
         },
-        "notes.txt": { type: "file", content: "Try: help, ls, cd projects, cat README.md, neofetch, theme" },
+        "notes.txt": {
+          type: "file",
+          content: "Try: help, ls, cd projects, cat README.md, neofetch, theme",
+        },
       },
     },
   },

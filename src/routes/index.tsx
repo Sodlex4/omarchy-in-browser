@@ -7,10 +7,18 @@ import { Desktop } from "@/features/Desktop";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "MyOmarchy — A Browser Dev OS" },
-      { name: "description", content: "Experience Omarchy in your browser. Interactive terminal, live config, and keybinding visualizer." },
-      { property: "og:title", content: "MyOmarchy — A Browser Dev OS" },
-      { property: "og:description", content: "Experience Omarchy in your browser. Interactive terminal, live config, and keybinding visualizer." },
+      { title: "Omarchy — A Browser Dev OS" },
+      {
+        name: "description",
+        content:
+          "Experience Omarchy in your browser. Interactive terminal, live config, and keybinding visualizer.",
+      },
+      { property: "og:title", content: "Omarchy — A Browser Dev OS" },
+      {
+        property: "og:description",
+        content:
+          "Experience Omarchy in your browser. Interactive terminal, live config, and keybinding visualizer.",
+      },
     ],
   }),
   component: Index,

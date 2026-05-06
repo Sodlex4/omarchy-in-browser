@@ -14,7 +14,11 @@ export function Window({
   children: React.ReactNode;
   accent?: string;
 }) {
-  const { workspaces, currentWs, focusApp, closeApp, config } = useOS();
+  const workspaces = useOS((s) => s.workspaces);
+  const currentWs = useOS((s) => s.currentWs);
+  const focusApp = useOS((s) => s.focusApp);
+  const closeApp = useOS((s) => s.closeApp);
+  const config = useOS((s) => s.config);
   const activeApp = workspaces[currentWs].activeApp;
   const ref = useRef<HTMLDivElement>(null);
   const isActive = activeApp === appId;
@@ -23,7 +27,7 @@ export function Window({
     gsap.fromTo(
       ref.current,
       { opacity: 0, scale: 0.96, y: 12 },
-      { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "power3.out" }
+      { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "power3.out" },
     );
   }, []);
 
@@ -44,7 +48,10 @@ export function Window({
     >
       <div className="h-9 flex items-center justify-between px-3 border-b border-border bg-surface/80">
         <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ background: accent, boxShadow: `0 0 8px ${accent}` }}
+          />
           <span className="text-xs text-muted-foreground">{title}</span>
         </div>
         <button

@@ -7,7 +7,14 @@ import { Terminal } from "./Terminal";
 import { Keybindings } from "./Keybindings";
 import { ConfigLab } from "./ConfigLab";
 import { InstallGuide } from "./InstallGuide";
-import { Terminal as TermIcon, Keyboard, SlidersHorizontal, Download } from "lucide-react";
+import { TmuxCheatsheet } from "./TmuxCheatsheet";
+import {
+  Terminal as TermIcon,
+  Keyboard,
+  SlidersHorizontal,
+  Download,
+  Terminal as TmuxIcon,
+} from "lucide-react";
 
 const dock = [
   { id: "terminal" as const, icon: TermIcon, color: "var(--neon-green)" },
@@ -16,8 +23,26 @@ const dock = [
   { id: "install" as const, icon: Download, color: "var(--neon-pink)" },
 ];
 
+const BANNER = [
+  " ▄█████▄    ▄███████████▄    ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄",
+  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███",
+  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███",
+  "███   ███  ███   ███   ███ ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███",
+  "███   ███  ███   ███   ███ ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███",
+  "███   ███  ███   ███   ███  ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███",
+  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███",
+  " ▀█████▀    ▀█   ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀",
+  "                                      ███   █▀",
+];
+
 export function Desktop() {
-  const { workspaces, currentWs, lastWsDirection, openApp, toggleLauncher, switchWorkspace, config } = useOS();
+  const workspaces = useOS((s) => s.workspaces);
+  const currentWs = useOS((s) => s.currentWs);
+  const lastWsDirection = useOS((s) => s.lastWsDirection);
+  const openApp = useOS((s) => s.openApp);
+  const toggleLauncher = useOS((s) => s.toggleLauncher);
+  const switchWorkspace = useOS((s) => s.switchWorkspace);
+  const config = useOS((s) => s.config);
   const accentVar = `var(--neon-${config.accent})`;
   const ws = workspaces[currentWs];
   const openApps = ws.openApps;
@@ -35,7 +60,7 @@ export function Desktop() {
     tl.fromTo(
       stageRef.current,
       { x: dir * 60, opacity: 0, filter: "blur(12px)", scale: 0.98 },
-      { x: 0, opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.45, ease: "power3.out" }
+      { x: 0, opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.45, ease: "power3.out" },
     );
     prevWsRef.current = currentWs;
   }, [currentWs, lastWsDirection]);
@@ -47,16 +72,40 @@ export function Desktop() {
         <div ref={stageRef} key={currentWs} className="absolute inset-0">
           {openApps.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none animate-float">
-              <div className="text-[10vw] md:text-9xl font-bold tracking-tighter leading-none" style={{ color: accentVar, textShadow: `0 0 40px ${accentVar}` }}>
-                myomarchy
-              </div>
-              <div className="mt-3 text-xs text-muted-foreground">
+              <pre
+                className="text-[1.3vw] md:text-[0.75rem] leading-[1.1] font-mono"
+                style={{ color: accentVar, textShadow: `0 0 30px ${accentVar}` }}
+              >
+                {BANNER.join("\n")}
+              </pre>
+              <div className="mt-2 text-xs text-muted-foreground">
                 workspace <span className="text-foreground">{currentWs}</span> · empty
               </div>
               <div className="mt-4 text-xs text-muted-foreground">
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">1-5</kbd> switch ws ·
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">D</kbd> launcher ·
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">Alt</kbd>+<kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">↵</kbd> terminal
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  Alt
+                </kbd>
+                +
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  1-5
+                </kbd>{" "}
+                switch ws ·
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  Super
+                </kbd>
+                +
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  Space/D
+                </kbd>{" "}
+                launcher ·
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  Super
+                </kbd>
+                +
+                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                  ↵
+                </kbd>{" "}
+                terminal
               </div>
             </div>
           )}
@@ -65,6 +114,7 @@ export function Desktop() {
           {openApps.includes("keybindings") && <Keybindings />}
           {openApps.includes("config") && <ConfigLab />}
           {openApps.includes("install") && <InstallGuide />}
+          {openApps.includes("tmux-cheatsheet") && <TmuxCheatsheet />}
         </div>
       </div>
 
@@ -81,9 +131,19 @@ export function Desktop() {
                 className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all"
                 style={{
                   borderColor: active ? accentVar : "var(--border)",
-                  color: active ? accentVar : populated ? "var(--foreground)" : "var(--muted-foreground)",
-                  background: active ? `color-mix(in oklab, ${accentVar} 18%, transparent)` : populated ? "var(--secondary)" : "transparent",
-                  boxShadow: active ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)` : undefined,
+                  color: active
+                    ? accentVar
+                    : populated
+                      ? "var(--foreground)"
+                      : "var(--muted-foreground)",
+                  background: active
+                    ? `color-mix(in oklab, ${accentVar} 18%, transparent)`
+                    : populated
+                      ? "var(--secondary)"
+                      : "transparent",
+                  boxShadow: active
+                    ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)`
+                    : undefined,
                 }}
                 title={`workspace ${id}`}
               >
@@ -98,9 +158,11 @@ export function Desktop() {
             onClick={toggleLauncher}
             className="h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all"
             style={{ background: "color-mix(in oklab, var(--accent) 20%, transparent)" }}
-            title="Launcher (Alt+D)"
+            title="Launcher (Super+Space or Alt+D)"
           >
-            <span className="text-xs font-bold" style={{ color: accentVar }}>≡</span>
+            <span className="text-xs font-bold" style={{ color: accentVar }}>
+              ≡
+            </span>
           </button>
           <div className="w-px h-6 bg-border" />
           {dock.map((d) => {
@@ -114,12 +176,19 @@ export function Desktop() {
                 style={{
                   color: d.color,
                   background: `color-mix(in oklab, ${d.color} 10%, transparent)`,
-                  boxShadow: open ? `0 0 14px color-mix(in oklab, ${d.color} 50%, transparent)` : undefined,
+                  boxShadow: open
+                    ? `0 0 14px color-mix(in oklab, ${d.color} 50%, transparent)`
+                    : undefined,
                 }}
                 title={d.id}
               >
                 <Icon className="h-4 w-4" />
-                {open && <span className="absolute -bottom-1 h-1 w-1 rounded-full" style={{ background: d.color }} />}
+                {open && (
+                  <span
+                    className="absolute -bottom-1 h-1 w-1 rounded-full"
+                    style={{ background: d.color }}
+                  />
+                )}
               </button>
             );
           })}

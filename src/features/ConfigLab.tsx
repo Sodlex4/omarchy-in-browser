@@ -9,7 +9,8 @@ const accents: Array<{ id: "green" | "purple" | "blue" | "pink"; label: string }
 ];
 
 export function ConfigLab() {
-  const { config, setConfig } = useOS();
+  const config = useOS((s) => s.config);
+  const setConfig = useOS((s) => s.setConfig);
   const accent = `var(--neon-${config.accent})`;
 
   return (
@@ -21,14 +22,38 @@ export function ConfigLab() {
             <p className="text-xs text-muted-foreground mt-1">Live tweak your environment.</p>
           </div>
 
-          <Slider label="border-radius" value={config.borderRadius} min={0} max={32}
-            onChange={(v) => setConfig({ borderRadius: v })} suffix="px" />
-          <Slider label="gaps" value={config.gap} min={0} max={48}
-            onChange={(v) => setConfig({ gap: v })} suffix="px" />
-          <Slider label="window-opacity" value={config.opacity} min={50} max={100}
-            onChange={(v) => setConfig({ opacity: v })} suffix="%" />
-          <Slider label="font-size" value={config.font} min={10} max={20}
-            onChange={(v) => setConfig({ font: v })} suffix="px" />
+          <Slider
+            label="border-radius"
+            value={config.borderRadius}
+            min={0}
+            max={32}
+            onChange={(v) => setConfig({ borderRadius: v })}
+            suffix="px"
+          />
+          <Slider
+            label="gaps"
+            value={config.gap}
+            min={0}
+            max={48}
+            onChange={(v) => setConfig({ gap: v })}
+            suffix="px"
+          />
+          <Slider
+            label="window-opacity"
+            value={config.opacity}
+            min={50}
+            max={100}
+            onChange={(v) => setConfig({ opacity: v })}
+            suffix="%"
+          />
+          <Slider
+            label="font-size"
+            value={config.font}
+            min={10}
+            max={20}
+            onChange={(v) => setConfig({ font: v })}
+            suffix="px"
+          />
 
           <div>
             <div className="flex items-center justify-between text-xs mb-2">
@@ -45,7 +70,10 @@ export function ConfigLab() {
                     borderColor: config.accent === a.id ? `var(--neon-${a.id})` : "var(--border)",
                     background: `color-mix(in oklab, var(--neon-${a.id}) 14%, transparent)`,
                     color: `var(--neon-${a.id})`,
-                    boxShadow: config.accent === a.id ? `0 0 16px color-mix(in oklab, var(--neon-${a.id}) 50%, transparent)` : undefined,
+                    boxShadow:
+                      config.accent === a.id
+                        ? `0 0 16px color-mix(in oklab, var(--neon-${a.id}) 50%, transparent)`
+                        : undefined,
                   }}
                 >
                   {a.label}
@@ -58,7 +86,7 @@ export function ConfigLab() {
         <div className="p-6 overflow-y-auto bg-[oklch(0.10_0.02_270)]">
           <div className="text-[11px] text-muted-foreground mb-2">~/.config/omarchy.toml</div>
           <pre className="text-xs leading-relaxed">
-{`[appearance]
+            {`[appearance]
 border_radius = ${config.borderRadius}
 gap          = ${config.gap}
 opacity      = ${(config.opacity / 100).toFixed(2)}
@@ -94,18 +122,35 @@ blur         = true
   );
 }
 
-function Slider({ label, value, min, max, onChange, suffix }: {
-  label: string; value: number; min: number; max: number; onChange: (v: number) => void; suffix?: string;
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+  suffix,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+  suffix?: string;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1.5">
         <span className="text-muted-foreground">{label}</span>
-        <span className="text-foreground tabular-nums">{value}{suffix}</span>
+        <span className="text-foreground tabular-nums">
+          {value}
+          {suffix}
+        </span>
       </div>
       <input
         type="range"
-        min={min} max={max} value={value}
+        min={min}
+        max={max}
+        value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-[var(--neon-purple)]"
       />
