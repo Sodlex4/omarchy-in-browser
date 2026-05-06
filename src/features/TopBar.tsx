@@ -3,7 +3,10 @@ import { useOS } from "@/store/os";
 import { Activity, Cpu, Wifi, Volume2 } from "lucide-react";
 
 export function TopBar() {
-  const { openApps, activeApp, focusApp, toggleLauncher, config } = useOS();
+  const { workspaces, currentWs, focusApp, toggleLauncher, config, switchWorkspace } = useOS();
+  const ws = workspaces[currentWs];
+  const openApps = ws.openApps;
+  const activeApp = ws.activeApp;
   const [time, setTime] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);

@@ -14,7 +14,8 @@ export function Window({
   children: React.ReactNode;
   accent?: string;
 }) {
-  const { activeApp, focusApp, closeApp, config } = useOS();
+  const { workspaces, currentWs, focusApp, closeApp, config } = useOS();
+  const activeApp = workspaces[currentWs].activeApp;
   const ref = useRef<HTMLDivElement>(null);
   const isActive = activeApp === appId;
 
