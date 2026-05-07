@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { X } from "lucide-react";
 import { useOS, type AppId } from "@/store/os";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Window({
   appId,
@@ -24,6 +25,7 @@ export function Window({
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
   const isActive = activeApp === appId;
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     gsap.fromTo(
@@ -47,7 +49,7 @@ export function Window({
     <div
       ref={ref}
       onMouseDown={() => focusApp(appId)}
-      className="absolute inset-4 md:inset-8 flex flex-col window-shadow border bg-card overflow-hidden"
+      className={`absolute ${isMobile ? "inset-0" : "inset-4 md:inset-8"} flex flex-col window-shadow border bg-card overflow-hidden`}
       style={{
         borderRadius: config.borderRadius,
         borderColor: isActive ? accent : "var(--border)",
@@ -70,9 +72,9 @@ export function Window({
           onClick={() => closeApp(appId)}
           aria-label="Close window"
           title="Close"
-          className="h-5 w-5 flex items-center justify-center rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+          className={`flex items-center justify-center rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors ${isMobile ? "h-9 w-9" : "h-5 w-5"}`}
         >
-          <X className="h-3 w-3" />
+          <X className={isMobile ? "h-4 w-4" : "h-3 w-3"} />
         </button>
       </div>
       <div className="flex-1 overflow-hidden">{children}</div>

@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useOS } from "@/store/os";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Window } from "./Window";
+import { Eye, EyeOff } from "lucide-react";
 
 const accents: Array<{ id: "green" | "purple" | "blue" | "pink"; label: string }> = [
   { id: "green", label: "Matrix" },
@@ -12,11 +15,13 @@ export function ConfigLab() {
   const config = useOS((s) => s.config);
   const setConfig = useOS((s) => s.setConfig);
   const accent = `var(--neon-${config.accent})`;
+  const isMobile = useIsMobile();
+  const [showPreview, setShowPreview] = useState(false);
 
   return (
     <Window appId="config" title="~/.config/omarchy.toml" accent="var(--neon-purple)">
-      <div className="h-full grid md:grid-cols-2 bg-[oklch(0.14_0.02_270)]">
-        <div className="p-6 border-r border-border overflow-y-auto space-y-6">
+      <div className={`h-full ${isMobile ? "flex flex-col" : "grid md:grid-cols-2"} bg-[oklch(0.14_0.02_270)]`}>
+        <div className={`${isMobile ? "flex-1 overflow-y-auto" : ""} p-6 border-r border-border overflow-y-auto space-y-6`}>
           <div>
             <h2 className="text-xl text-glow-purple text-neon-purple">Config Lab</h2>
             <p className="text-xs text-muted-foreground mt-1">Live tweak your environment.</p>
@@ -85,7 +90,17 @@ export function ConfigLab() {
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto bg-[oklch(0.10_0.02_270)]">
+        {isMobile && (
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="flex items-center justify-center gap-2 py-2 border-t border-border text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {showPreview ? "hide preview" : "show preview"}
+          </button>
+        )}
+        {(showPreview || !isMobile) && (
+        <div className={`${isMobile ? "" : ""} p-6 overflow-y-auto bg-[oklch(0.10_0.02_270)]`}>
           <div className="text-[11px] text-muted-foreground mb-2">~/.config/omarchy.toml</div>
           <pre className="text-xs leading-relaxed">
             {`[appearance]
@@ -119,6 +134,7 @@ blur         = true
             ))}
           </div>
         </div>
+        )}
       </div>
     </Window>
   );

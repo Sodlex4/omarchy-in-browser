@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useOS } from "@/store/os";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Activity, Cpu, Wifi, Volume2 } from "lucide-react";
 
 export function TopBar() {
@@ -22,46 +23,51 @@ export function TopBar() {
   }, []);
 
   const accentVar = `var(--neon-${config.accent})`;
+  const isMobile = useIsMobile();
 
   return (
     <div className="h-9 flex items-center justify-between px-3 border-b border-border bg-card/80 backdrop-blur-md text-xs select-none z-30 relative">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 min-w-0">
         <button
           onClick={toggleLauncher}
-          className="px-2 py-1 rounded hover:bg-secondary flex items-center gap-2"
+          className="px-2 py-1 rounded hover:bg-secondary flex items-center gap-2 shrink-0"
         >
           <span
             className="h-2 w-2 rounded-full"
             style={{ background: accentVar, boxShadow: `0 0 8px ${accentVar}` }}
           />
-          <span className="font-bold tracking-wider">omarchy</span>
+          {!isMobile && <span className="font-bold tracking-wider">omarchy</span>}
         </button>
-        <div className="ml-2 flex items-center gap-1">
+        <div className="ml-2 flex items-center gap-1 overflow-x-auto scrollbar-none">
           {openApps.map((a) => (
             <button
               key={a}
               onClick={() => focusApp(a)}
-              className={`px-2 py-1 rounded transition-colors ${activeApp === a ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60"}`}
+              className={`px-2 py-1 rounded transition-colors shrink-0 ${activeApp === a ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60"}`}
             >
               {a}
             </button>
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-4 text-muted-foreground">
-        <span className="text-foreground">ws:{currentWs}</span>
-        <span className="text-foreground">{layout}</span>
-        {tmuxActive && <span className="text-neon-purple text-[10px]">tmux</span>}
-        <span className="text-[10px] capitalize">{terminal}</span>
-        {!gapsEnabled && <span className="text-destructive/60 text-[10px]">no-gaps</span>}
-        <span className="flex items-center gap-1.5">
-          <Cpu className="h-3 w-3" /> 12%
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Activity className="h-3 w-3" /> 412M
-        </span>
-        <Wifi className="h-3 w-3" />
-        <Volume2 className="h-3 w-3" />
+      <div className="flex items-center gap-4 text-muted-foreground shrink-0">
+        {!isMobile && (
+          <>
+            <span className="text-foreground">ws:{currentWs}</span>
+            <span className="text-foreground">{layout}</span>
+            {tmuxActive && <span className="text-neon-purple text-[10px]">tmux</span>}
+            <span className="text-[10px] capitalize">{terminal}</span>
+            {!gapsEnabled && <span className="text-destructive/60 text-[10px]">no-gaps</span>}
+            <span className="flex items-center gap-1.5">
+              <Cpu className="h-3 w-3" /> 12%
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Activity className="h-3 w-3" /> 412M
+            </span>
+            <Wifi className="h-3 w-3" />
+            <Volume2 className="h-3 w-3" />
+          </>
+        )}
         <span className="text-foreground tabular-nums">
           {time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </span>

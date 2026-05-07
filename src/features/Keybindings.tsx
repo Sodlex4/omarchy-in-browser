@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useOS } from "@/store/os";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Window } from "./Window";
 import { Search } from "lucide-react";
 
@@ -193,6 +194,7 @@ const allHotkeys: HotkeyGroup[] = [
 export function Keybindings() {
   const pressedKeys = useOS((s) => s.pressedKeys);
   const config = useOS((s) => s.config);
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
 
   const filtered = allHotkeys
@@ -254,13 +256,13 @@ export function Keybindings() {
               <h3 className="text-xs uppercase tracking-wider text-neon-purple/70 mb-3 font-semibold border-b border-border/50 pb-1">
                 {g.category}
               </h3>
-              <div className="grid sm:grid-cols-2 gap-2">
+              <div className={`grid gap-2 ${isMobile ? "grid-cols-1" : "sm:grid-cols-2"}`}>
                 {g.binds.map((b) => {
                   const triggered = b.keys.every((k) => pressedKeys.includes(k));
                   return (
                     <div
                       key={b.action + b.keys.join("")}
-                      className="p-3 rounded-lg border border-border bg-card/40 transition-all"
+                      className={`rounded-lg border border-border bg-card/40 transition-all ${isMobile ? "p-4" : "p-3"}`}
                       style={{
                         borderRadius: config.borderRadius,
                         borderColor: triggered ? "var(--neon-blue)" : undefined,

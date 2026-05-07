@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useOS, type TmuxPane } from "@/store/os";
 import { runCommand } from "@/utils/commands";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Window } from "./Window";
 
 export function Terminal() {
@@ -18,6 +19,7 @@ function PlainTerminal() {
   const cmdHistory = useOS((s) => s.cmdHistory);
   const config = useOS((s) => s.config);
   const terminal = useOS((s) => s.terminal);
+  const isMobile = useIsMobile();
   const [input, setInput] = useState("");
   const [histIdx, setHistIdx] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,8 +75,8 @@ function PlainTerminal() {
             </div>
           ))}
           <div className="flex items-center gap-2">
-            <span className="text-neon-green text-glow-green">{cwd}</span>
-            <span className="text-neon-purple">❯</span>
+            <span className="text-neon-green text-glow-green shrink-0">{cwd}</span>
+            <span className="text-neon-purple shrink-0">❯</span>
             <input
               ref={inputRef}
               autoFocus
@@ -103,10 +105,45 @@ function PlainTerminal() {
                 }
               }}
               aria-label="Terminal input"
-              className="flex-1 bg-transparent outline-none text-foreground caret-neon-green"
+              className="flex-1 bg-transparent outline-none text-foreground caret-neon-green min-w-0"
               spellCheck={false}
               autoComplete="off"
             />
+            {isMobile && (
+              <div className="flex gap-1 shrink-0">
+                <button
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (!cmdHistory.length) return;
+                    const next = histIdx === null ? cmdHistory.length - 1 : Math.max(0, (histIdx ?? 0) - 1);
+                    setHistIdx(next);
+                    setInput(cmdHistory[next] ?? "");
+                  }}
+                  aria-label="Previous command"
+                  className="h-8 w-8 rounded flex items-center justify-center border border-border text-xs active:scale-90"
+                >
+                  ↑
+                </button>
+                <button
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (histIdx === null) return;
+                    const next = histIdx + 1;
+                    if (next >= cmdHistory.length) {
+                      setHistIdx(null);
+                      setInput("");
+                    } else {
+                      setHistIdx(next);
+                      setInput(cmdHistory[next]);
+                    }
+                  }}
+                  aria-label="Next command"
+                  className="h-8 w-8 rounded flex items-center justify-center border border-border text-xs active:scale-90"
+                >
+                  ↓
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

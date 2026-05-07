@@ -157,10 +157,10 @@ export function Launcher() {
                 key={a.id}
                 onMouseEnter={() => setIdx(i)}
                 onClick={() => openApp(a.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${active ? "bg-secondary" : ""}`}
+                className={`w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-lg text-left transition-all ${active ? "bg-secondary" : ""}`}
               >
                 <div
-                  className="h-9 w-9 rounded-md flex items-center justify-center border border-border"
+                  className="h-10 w-10 rounded-md flex items-center justify-center border border-border"
                   style={{
                     background: `color-mix(in oklab, ${a.color} 12%, transparent)`,
                     color: a.color,

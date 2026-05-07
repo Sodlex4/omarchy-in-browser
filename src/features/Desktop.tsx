@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useOS, WORKSPACE_IDS, type WorkspaceId } from "@/store/os";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TopBar } from "./TopBar";
 import { Launcher } from "./Launcher";
 import { Terminal } from "./Terminal";
@@ -35,6 +36,7 @@ export function Desktop() {
   const config = useOS((s) => s.config);
   const accentVar = `var(--neon-${config.accent})`;
   const reducedMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const ws = workspaces[currentWs];
   const openApps = ws.openApps;
 
@@ -79,32 +81,38 @@ export function Desktop() {
               <div className="mt-2 text-xs text-muted-foreground">
                 workspace <span className="text-foreground">{currentWs}</span> · empty
               </div>
-              <div className="mt-4 text-xs text-muted-foreground">
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  Alt
-                </kbd>
-                +
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  1-5
-                </kbd>{" "}
-                switch ws ·
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  Super
-                </kbd>
-                +
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  Space/D
-                </kbd>{" "}
-                launcher ·
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  Super
-                </kbd>
-                +
-                <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
-                  ↵
-                </kbd>{" "}
-                terminal
-              </div>
+              {isMobile ? (
+                <div className="mt-4 text-xs text-muted-foreground">
+                  tap the launcher or dock icons below to open apps
+                </div>
+              ) : (
+                <div className="mt-4 text-xs text-muted-foreground">
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    Alt
+                  </kbd>
+                  +
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    1-5
+                  </kbd>{" "}
+                  switch ws ·
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    Super
+                  </kbd>
+                  +
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    Space/D
+                  </kbd>{" "}
+                  launcher ·
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    Super
+                  </kbd>
+                  +
+                  <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border mx-0.5">
+                    ↵
+                  </kbd>{" "}
+                  terminal
+                </div>
+              )}
             </div>
           )}
 
@@ -117,84 +125,162 @@ export function Desktop() {
       </div>
 
       {/* Dock */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
-        <div className="flex items-center gap-1 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
-          {WORKSPACE_IDS.map((id) => {
-            const populated = workspaces[id].openApps.length > 0;
-            const active = id === currentWs;
-            return (
-              <button
-                key={id}
-                onClick={() => switchWorkspace(id)}
-                aria-label={`Switch to workspace ${id}`}
-                className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all hover:scale-110 cursor-pointer"
-                style={{
-                  borderColor: active ? accentVar : "var(--border)",
-                  color: active
-                    ? accentVar
-                    : populated
-                      ? "var(--foreground)"
-                      : "var(--muted-foreground)",
-                  background: active
-                    ? `color-mix(in oklab, ${accentVar} 18%, transparent)`
-                    : populated
-                      ? "var(--secondary)"
-                      : "transparent",
-                  boxShadow: active
-                    ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)`
-                    : undefined,
-                }}
-                title={`workspace ${id}`}
-              >
-                {id}
-              </button>
-            );
-          })}
+      {isMobile ? (
+        <div className="fixed bottom-0 inset-x-0 z-30 safe-area-bottom">
+          <div className="flex items-center justify-around px-2 py-1 bg-card/90 backdrop-blur-md border-t border-border">
+            {WORKSPACE_IDS.map((id) => {
+              const populated = workspaces[id].openApps.length > 0;
+              const active = id === currentWs;
+              return (
+                <button
+                  key={id}
+                  onClick={() => switchWorkspace(id)}
+                  aria-label={`Switch to workspace ${id}`}
+                  className="h-11 w-11 rounded-lg text-sm font-bold border transition-all active:scale-90"
+                  style={{
+                    borderColor: active ? accentVar : "var(--border)",
+                    color: active
+                      ? accentVar
+                      : populated
+                        ? "var(--foreground)"
+                        : "var(--muted-foreground)",
+                    background: active
+                      ? `color-mix(in oklab, ${accentVar} 18%, transparent)`
+                      : populated
+                        ? "var(--secondary)"
+                        : "transparent",
+                    boxShadow: active
+                      ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)`
+                      : undefined,
+                  }}
+                  title={`workspace ${id}`}
+                >
+                  {id}
+                </button>
+              );
+            })}
+            <div className="w-px h-7 bg-border" />
+            <button
+              onClick={toggleLauncher}
+              aria-label="Open application launcher"
+              className="h-11 w-11 rounded-xl flex items-center justify-center border border-border active:scale-90"
+              style={{ background: "color-mix(in oklab, var(--accent) 20%, transparent)" }}
+              title="Launcher"
+            >
+              <span className="text-base font-bold" style={{ color: accentVar }}>
+                ≡
+              </span>
+            </button>
+            {dock.map((d) => {
+              const Icon = d.icon;
+              const open = openApps.includes(d.id);
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => openApp(d.id)}
+                  aria-label={`Open ${d.id}`}
+                  className="relative h-11 w-11 rounded-xl flex items-center justify-center border border-border active:scale-90"
+                  style={{
+                    color: d.color,
+                    background: `color-mix(in oklab, ${d.color} 10%, transparent)`,
+                    boxShadow: open
+                      ? `0 0 14px color-mix(in oklab, ${d.color} 50%, transparent)`
+                      : undefined,
+                  }}
+                  title={d.id}
+                >
+                  <Icon className="h-5 w-5" />
+                  {open && (
+                    <span
+                      className="absolute -bottom-0.5 h-1 w-1 rounded-full"
+                      style={{ background: d.color }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
+      ) : (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
+          <div className="flex items-center gap-1 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
+            {WORKSPACE_IDS.map((id) => {
+              const populated = workspaces[id].openApps.length > 0;
+              const active = id === currentWs;
+              return (
+                <button
+                  key={id}
+                  onClick={() => switchWorkspace(id)}
+                  aria-label={`Switch to workspace ${id}`}
+                  className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all hover:scale-110 cursor-pointer"
+                  style={{
+                    borderColor: active ? accentVar : "var(--border)",
+                    color: active
+                      ? accentVar
+                      : populated
+                        ? "var(--foreground)"
+                        : "var(--muted-foreground)",
+                    background: active
+                      ? `color-mix(in oklab, ${accentVar} 18%, transparent)`
+                      : populated
+                        ? "var(--secondary)"
+                        : "transparent",
+                    boxShadow: active
+                      ? `0 0 12px color-mix(in oklab, ${accentVar} 50%, transparent)`
+                      : undefined,
+                  }}
+                  title={`workspace ${id}`}
+                >
+                  {id}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
-          <button
-            onClick={toggleLauncher}
-            aria-label="Open application launcher"
-            className="h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all"
-            style={{ background: "color-mix(in oklab, var(--accent) 20%, transparent)" }}
-            title="Launcher (Super+Space or Alt+D)"
-          >
-            <span className="text-xs font-bold" style={{ color: accentVar }}>
-              ≡
-            </span>
-          </button>
-          <div className="w-px h-6 bg-border" />
-          {dock.map((d) => {
-            const Icon = d.icon;
-            const open = openApps.includes(d.id);
-            return (
-              <button
-                key={d.id}
-                onClick={() => openApp(d.id)}
-                aria-label={`Open ${d.id}`}
-                className="relative h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
-                style={{
-                  color: d.color,
-                  background: `color-mix(in oklab, ${d.color} 10%, transparent)`,
-                  boxShadow: open
-                    ? `0 0 14px color-mix(in oklab, ${d.color} 50%, transparent)`
-                    : undefined,
-                }}
-                title={d.id}
-              >
-                <Icon className="h-4 w-4" />
-                {open && (
-                  <span
-                    className="absolute -bottom-1 h-1 w-1 rounded-full"
-                    style={{ background: d.color }}
-                  />
-                )}
-              </button>
-            );
-          })}
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
+            <button
+              onClick={toggleLauncher}
+              aria-label="Open application launcher"
+              className="h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all"
+              style={{ background: "color-mix(in oklab, var(--accent) 20%, transparent)" }}
+              title="Launcher (Super+Space or Alt+D)"
+            >
+              <span className="text-xs font-bold" style={{ color: accentVar }}>
+                ≡
+              </span>
+            </button>
+            <div className="w-px h-6 bg-border" />
+            {dock.map((d) => {
+              const Icon = d.icon;
+              const open = openApps.includes(d.id);
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => openApp(d.id)}
+                  aria-label={`Open ${d.id}`}
+                  className="relative h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                  style={{
+                    color: d.color,
+                    background: `color-mix(in oklab, ${d.color} 10%, transparent)`,
+                    boxShadow: open
+                      ? `0 0 14px color-mix(in oklab, ${d.color} 50%, transparent)`
+                      : undefined,
+                  }}
+                  title={d.id}
+                >
+                  <Icon className="h-4 w-4" />
+                  {open && (
+                    <span
+                      className="absolute -bottom-1 h-1 w-1 rounded-full"
+                      style={{ background: d.color }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <Launcher />
     </div>

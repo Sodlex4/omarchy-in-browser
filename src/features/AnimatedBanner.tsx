@@ -2,11 +2,13 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import gsap from "gsap";
 import { OMARCHY_BANNER } from "@/data/banner";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AnimatedBanner({ accent }: { accent: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<HTMLSpanElement[]>([]);
   const reducedMotion = useReducedMotion();
+  const isMobile = useIsMobile();
   const [mounted, setMounted] = useState(false);
 
   const registerChar = useCallback((el: HTMLSpanElement | null) => {
@@ -25,7 +27,7 @@ export function AnimatedBanner({ accent }: { accent: string }) {
     const chars = charsRef.current.filter(Boolean);
     const nonSpace = chars.filter((el) => el.textContent !== " ");
 
-    if (reducedMotion) {
+    if (reducedMotion || isMobile) {
       nonSpace.forEach((el) => {
         gsap.set(el, { opacity: 1, scale: 1 });
       });

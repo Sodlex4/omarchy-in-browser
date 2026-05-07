@@ -262,7 +262,7 @@ export function InstallGuide() {
                 start();
               }
             }}
-            className="px-4 py-2 rounded-md font-bold text-sm border transition-all disabled:opacity-50"
+            className="px-6 py-3 min-h-[44px] rounded-md font-bold text-sm border transition-all disabled:opacity-50"
             style={{
               borderColor: "var(--neon-pink)",
               color: "var(--neon-pink)",
