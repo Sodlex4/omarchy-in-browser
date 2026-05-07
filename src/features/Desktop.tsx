@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useOS, WORKSPACE_IDS, type WorkspaceId } from "@/store/os";
-import { OMARCHY_BANNER } from "@/data/banner";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { TopBar } from "./TopBar";
 import { Launcher } from "./Launcher";
@@ -10,6 +9,7 @@ import { Keybindings } from "./Keybindings";
 import { ConfigLab } from "./ConfigLab";
 import { InstallGuide } from "./InstallGuide";
 import { TmuxCheatsheet } from "./TmuxCheatsheet";
+import { AnimatedBanner } from "./AnimatedBanner";
 import {
   Terminal as TermIcon,
   Keyboard,
@@ -75,12 +75,7 @@ export function Desktop() {
         <div ref={stageRef} key={currentWs} className="absolute inset-0">
           {openApps.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none animate-float">
-              <pre
-                className="text-[1.3vw] md:text-[0.75rem] leading-[1.1] font-mono"
-                style={{ color: accentVar, textShadow: `0 0 30px ${accentVar}` }}
-              >
-                {OMARCHY_BANNER.join("\n")}
-              </pre>
+              <AnimatedBanner accent={accentVar} />
               <div className="mt-2 text-xs text-muted-foreground">
                 workspace <span className="text-foreground">{currentWs}</span> · empty
               </div>
