@@ -29,14 +29,22 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Omarchy — A Browser Dev OS" },
+      {
+        name: "description",
+        content:
+          "Interactive Omarchy Linux desktop simulation with terminal, tmux multiplexer, and live theme customization.",
+      },
+      { name: "author", content: "Omarchy" },
+      { property: "og:title", content: "Omarchy — A Browser Dev OS" },
+      {
+        property: "og:description",
+        content:
+          "Interactive Omarchy Linux desktop simulation with terminal, tmux multiplexer, and live theme customization.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@omarchy" },
     ],
     links: [
       {

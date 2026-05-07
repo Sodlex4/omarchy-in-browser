@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { Check, Terminal } from "lucide-react";
 import { useOS } from "@/store/os";
 import { Window } from "./Window";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 const terminals = [
   { id: "alacritty" as const, name: "Alacritty", desc: "Fast, minimal, no native tabs/splits" },
@@ -40,6 +41,7 @@ export function InstallGuide() {
   const [done, setDone] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const barRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
 
   const selectTerminal = (t: "alacritty" | "ghostty" | "kitty") => {
     setTerminal(t);
@@ -90,7 +92,11 @@ export function InstallGuide() {
   }, [step, running]);
 
   useEffect(() => {
-    gsap.to(barRef.current, { width: `${progress}%`, duration: 0.4, ease: "power2.out" });
+    gsap.to(barRef.current, {
+      width: `${progress}%`,
+      duration: reducedMotion ? 0.01 : 0.4,
+      ease: "power2.out",
+    });
   }, [progress]);
 
   const start = () => {
@@ -209,7 +215,14 @@ export function InstallGuide() {
               </span>
               <span className="tabular-nums">{Math.floor(progress)}%</span>
             </div>
-            <div className="h-2 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-2 rounded-full bg-secondary overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.floor(progress)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Installation progress"
+            >
               <div
                 ref={barRef}
                 className="h-full"

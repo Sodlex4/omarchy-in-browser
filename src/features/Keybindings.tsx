@@ -242,6 +242,7 @@ export function Keybindings() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search hotkeys..."
+              aria-label="Filter keybindings"
               className="w-full bg-secondary/50 border border-border rounded-lg pl-9 pr-3 py-2 text-xs outline-none placeholder:text-muted-foreground focus:border-neon-blue/50"
             />
           </div>

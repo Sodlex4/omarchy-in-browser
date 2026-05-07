@@ -65,6 +65,8 @@ type State = {
   cmdHistory: string[];
   config: Config;
   pressedKeys: string[];
+  lineId: number;
+  paneId: number;
   tmux: TmuxState;
   // derived getters
   getActiveApp: () => AppId | null;
@@ -108,9 +110,6 @@ type State = {
   tmuxExecCommand: (cmd: string) => void;
 };
 
-let lineId = 0;
-let paneId = 0;
-
 const emptyWorkspaces = (): Record<WorkspaceId, Workspace> =>
   WORKSPACE_IDS.reduce(
     (acc, id) => {
@@ -120,23 +119,23 @@ const emptyWorkspaces = (): Record<WorkspaceId, Workspace> =>
     {} as Record<WorkspaceId, Workspace>,
   );
 
-const newPane = (cwd = "~"): TmuxPane => ({
-  id: `${++paneId}`,
+const newPane = (paneId: number, cwd = "~"): TmuxPane => ({
+  id: `${paneId}`,
   cwd,
   lines: [],
   input: "",
 });
 
-const newWindow = (name = "0"): TmuxWindow => ({
+const newWindow = (name = "0", idStart = 0): TmuxWindow => ({
   name,
   layout: "single",
-  panes: [newPane()],
+  panes: [newPane(idStart + 1)],
   activePane: 0,
 });
 
-const newSession = (name = "0"): TmuxSession => ({
+const newSession = (name = "0", idStart = 0): TmuxSession => ({
   name,
-  windows: [newWindow()],
+  windows: [newWindow("0", idStart)],
   activeWindow: 0,
 });
 
@@ -154,6 +153,8 @@ export const useOS = create<State>((set, get) => ({
   cmdHistory: [],
   config: { borderRadius: 8, gap: 12, accent: "green", opacity: 92, font: 14 },
   pressedKeys: [],
+  lineId: 0,
+  paneId: 0,
   tmux: { active: false, sessions: [], activeSession: 0, prefixMode: false, copyMode: false },
 
   getActiveApp: () => get().workspaces[get().currentWs].activeApp,
@@ -229,7 +230,8 @@ export const useOS = create<State>((set, get) => ({
       };
     }),
 
-  pushLine: (line) => set((s) => ({ history: [...s.history, { ...line, id: ++lineId }] })),
+  pushLine: (line) =>
+    set((s) => ({ history: [...s.history, { ...line, id: s.lineId + 1 }], lineId: s.lineId + 1 })),
   clearTerm: () => set({ history: [] }),
   setCwd: (p) => set({ cwd: p }),
   pushCmd: (c) => set((s) => ({ cmdHistory: [...s.cmdHistory, c] })),
@@ -242,8 +244,11 @@ export const useOS = create<State>((set, get) => ({
   tmuxNewSession: (name) =>
     set((s) => {
       const sessionName = name || `${s.tmux.sessions.length}`;
-      const sessions = [...s.tmux.sessions, newSession(sessionName)];
-      return { tmux: { ...s.tmux, sessions, activeSession: sessions.length - 1 } };
+      const sessions = [...s.tmux.sessions, newSession(sessionName, s.paneId + 1)];
+      return {
+        tmux: { ...s.tmux, sessions, activeSession: sessions.length - 1 },
+        paneId: s.paneId + 1,
+      };
     }),
 
   tmuxKillSession: () =>
@@ -305,7 +310,7 @@ export const useOS = create<State>((set, get) => ({
       session.activeWindow = windows.length - 1;
       session.windows = windows;
       sessions[s.tmux.activeSession] = session;
-      return { tmux: { ...s.tmux, sessions } };
+      return { tmux: { ...s.tmux, sessions, paneId: s.paneId + 1 } };
     }),
 
   tmuxKillWindow: () =>
@@ -315,7 +320,12 @@ export const useOS = create<State>((set, get) => ({
       const session = { ...sessions[s.tmux.activeSession] };
       const windows = session.windows.filter((_, i) => i !== session.activeWindow);
       if (!windows.length) {
-        sessions[s.tmux.activeSession] = { ...session, windows: [newWindow()], activeWindow: 0 };
+        sessions[s.tmux.activeSession] = {
+          ...session,
+          windows: [newWindow("0", s.paneId + 1)],
+          activeWindow: 0,
+        };
+        return { tmux: { ...s.tmux, sessions, paneId: s.paneId + 1 } };
       } else {
         session.activeWindow = Math.min(session.activeWindow, windows.length - 1);
         session.windows = windows;
@@ -360,11 +370,12 @@ export const useOS = create<State>((set, get) => ({
   tmuxSplitPane: (direction) =>
     set((s) => {
       if (!s.tmux.active) return s;
+      const newId = s.paneId + 1;
       const sessions = [...s.tmux.sessions];
       const session = { ...sessions[s.tmux.activeSession] };
       const windows = [...session.windows];
       const window = { ...windows[session.activeWindow] };
-      const panes = [...window.panes, newPane()];
+      const panes = [...window.panes, newPane(newId)];
       window.panes = panes;
       window.activePane = panes.length - 1;
       if (panes.length === 2)
@@ -374,7 +385,7 @@ export const useOS = create<State>((set, get) => ({
       windows[session.activeWindow] = window;
       session.windows = windows;
       sessions[s.tmux.activeSession] = session;
-      return { tmux: { ...s.tmux, sessions } };
+      return { tmux: { ...s.tmux, sessions }, paneId: newId };
     }),
 
   tmuxKillPane: () =>
@@ -386,7 +397,15 @@ export const useOS = create<State>((set, get) => ({
       const window = { ...windows[session.activeWindow] };
       const panes = window.panes.filter((_, i) => i !== window.activePane);
       if (!panes.length) {
-        panes.push(newPane());
+        const newId = s.paneId + 1;
+        panes.push(newPane(newId));
+        window.panes = panes;
+        window.activePane = 0;
+        window.layout = "single";
+        windows[session.activeWindow] = window;
+        session.windows = windows;
+        sessions[s.tmux.activeSession] = session;
+        return { tmux: { ...s.tmux, sessions }, paneId: newId };
       }
       window.panes = panes;
       window.activePane = Math.min(window.activePane, panes.length - 1);
@@ -463,20 +482,21 @@ export const useOS = create<State>((set, get) => ({
       const panes = [...window.panes];
       const pane = { ...panes[window.activePane] };
       const trimmed = cmd.trim();
-      pane.lines.push({ id: ++lineId, type: "in", text: `${pane.cwd} ❯ ${cmd}` });
+      let nextLineId = s.lineId + 1;
+      pane.lines.push({ id: nextLineId++, type: "in", text: `${pane.cwd} ❯ ${cmd}` });
       if (!trimmed) {
         panes[window.activePane] = pane;
         window.panes = panes;
         windows[session.activeWindow] = window;
         session.windows = windows;
         sessions[s.tmux.activeSession] = session;
-        return { tmux: { ...s.tmux, sessions } };
+        return { tmux: { ...s.tmux, sessions }, lineId: nextLineId - 1 };
       }
       const handleOut = (text: string) => {
-        pane.lines.push({ id: ++lineId, type: "out", text });
+        pane.lines.push({ id: nextLineId++, type: "out", text });
       };
       const handleSys = (text: string) => {
-        pane.lines.push({ id: ++lineId, type: "sys", text });
+        pane.lines.push({ id: nextLineId++, type: "sys", text });
       };
       const [c, ...args] = trimmed.split(/\s+/);
       switch (c) {
@@ -530,6 +550,6 @@ export const useOS = create<State>((set, get) => ({
       windows[session.activeWindow] = window;
       session.windows = windows;
       sessions[s.tmux.activeSession] = session;
-      return { tmux: { ...s.tmux, sessions } };
+      return { tmux: { ...s.tmux, sessions }, lineId: nextLineId - 1 };
     }),
 }));

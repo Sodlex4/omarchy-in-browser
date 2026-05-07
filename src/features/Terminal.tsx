@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useOS } from "@/store/os";
+import { useOS, type TmuxPane } from "@/store/os";
 import { runCommand } from "@/utils/commands";
 import { Window } from "./Window";
 
@@ -102,6 +102,7 @@ function PlainTerminal() {
                   }
                 }
               }}
+              aria-label="Terminal input"
               className="flex-1 bg-transparent outline-none text-foreground caret-neon-green"
               spellCheck={false}
               autoComplete="off"
@@ -158,15 +159,16 @@ function getGridClass(count: number, layout: string): string {
     return count === 2 ? "grid-cols-1 grid-rows-2" : "grid-cols-1 grid-rows-3";
   if (layout === "main-vertical")
     return count === 2 ? "grid-cols-2 grid-rows-1" : "grid-cols-3 grid-rows-1";
-  if (layout === "even-vertical") return "grid-cols-1";
+  if (layout === "even-vertical") return "grid-cols-1 grid-rows-2";
   if (layout === "tiled") return count <= 4 ? "grid-cols-2 grid-rows-2" : "grid-cols-3 grid-rows-2";
   return "grid-cols-1 grid-rows-1";
 }
 
-function TmuxPaneView({ pane, isActive }: { pane: any; isActive: boolean }) {
+function TmuxPaneView({ pane, isActive }: { pane: TmuxPane; isActive: boolean }) {
   const tmuxExecCommand = useOS((s) => s.tmuxExecCommand);
   const [input, setInput] = useState("");
   const [histIdx, setHistIdx] = useState<number | null>(null);
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -175,6 +177,8 @@ function TmuxPaneView({ pane, isActive }: { pane: any; isActive: boolean }) {
   }, [pane.lines]);
 
   const submit = () => {
+    const trimmed = input.trim();
+    if (trimmed) setCmdHistory((prev) => [...prev, trimmed]);
     tmuxExecCommand(input);
     setInput("");
     setHistIdx(null);
@@ -212,7 +216,27 @@ function TmuxPaneView({ pane, isActive }: { pane: any; isActive: boolean }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();
+              if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (!cmdHistory.length) return;
+                const next = histIdx === null ? cmdHistory.length - 1 : Math.max(0, histIdx - 1);
+                setHistIdx(next);
+                setInput(cmdHistory[next] ?? "");
+              }
+              if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (histIdx === null) return;
+                const next = histIdx + 1;
+                if (next >= cmdHistory.length) {
+                  setHistIdx(null);
+                  setInput("");
+                } else {
+                  setHistIdx(next);
+                  setInput(cmdHistory[next]);
+                }
+              }
             }}
+            aria-label="Terminal pane input"
             className="flex-1 bg-transparent outline-none text-foreground caret-neon-green text-[11px]"
             spellCheck={false}
             autoComplete="off"

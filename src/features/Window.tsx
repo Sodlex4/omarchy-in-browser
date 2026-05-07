@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { X } from "lucide-react";
 import { useOS, type AppId } from "@/store/os";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 export function Window({
   appId,
@@ -21,13 +22,24 @@ export function Window({
   const config = useOS((s) => s.config);
   const activeApp = workspaces[currentWs].activeApp;
   const ref = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
   const isActive = activeApp === appId;
 
   useEffect(() => {
     gsap.fromTo(
       ref.current,
-      { opacity: 0, scale: 0.96, y: 12 },
-      { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "power3.out" },
+      {
+        opacity: reducedMotion ? 1 : 0,
+        scale: reducedMotion ? 1 : 0.96,
+        y: reducedMotion ? 0 : 12,
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: reducedMotion ? 0.01 : 0.3,
+        ease: reducedMotion ? "none" : "power3.out",
+      },
     );
   }, []);
 
@@ -56,6 +68,8 @@ export function Window({
         </div>
         <button
           onClick={() => closeApp(appId)}
+          aria-label="Close window"
+          title="Close"
           className="h-5 w-5 flex items-center justify-center rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
         >
           <X className="h-3 w-3" />

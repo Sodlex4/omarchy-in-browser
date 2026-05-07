@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useOS } from "@/store/os";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   Terminal as TermIcon,
   Keyboard,
@@ -62,6 +63,7 @@ export function Launcher() {
   const idxRef = useRef(0);
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const reducedMotion = useReducedMotion();
 
   const filtered = apps.filter((a) => a.name.toLowerCase().includes(q.toLowerCase()));
 
@@ -73,8 +75,20 @@ export function Launcher() {
     requestAnimationFrame(() => inputRef.current?.focus());
     gsap.fromTo(
       ref.current,
-      { opacity: 0, y: -10, scale: 0.96, filter: "blur(8px)" },
-      { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.25, ease: "power3.out" },
+      {
+        opacity: reducedMotion ? 1 : 0,
+        y: reducedMotion ? 0 : -10,
+        scale: reducedMotion ? 1 : 0.96,
+        filter: reducedMotion ? "none" : "blur(8px)",
+      },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: "none",
+        duration: reducedMotion ? 0.01 : 0.25,
+        ease: reducedMotion ? "none" : "power3.out",
+      },
     );
   }, [launcherOpen]);
 
@@ -126,7 +140,8 @@ export function Launcher() {
               setQ(e.target.value);
               setIdx(0);
             }}
-            placeholder="search apps..."
+            placeholder="Search applications..."
+            aria-label="Search applications"
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
           />
           <kbd className="text-[10px] text-muted-foreground border border-border px-1.5 py-0.5 rounded">

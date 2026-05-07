@@ -60,11 +60,13 @@ export function ConfigLab() {
               <span className="text-muted-foreground">accent</span>
               <span style={{ color: accent }}>{config.accent}</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label="Accent color">
               {accents.map((a) => (
                 <button
                   key={a.id}
                   onClick={() => setConfig({ accent: a.id })}
+                  role="radio"
+                  aria-checked={config.accent === a.id}
                   className="px-2 py-2 rounded-md border text-xs transition-all"
                   style={{
                     borderColor: config.accent === a.id ? `var(--neon-${a.id})` : "var(--border)",
@@ -152,6 +154,7 @@ function Slider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={`${label}: ${value}${suffix}`}
         className="w-full accent-[var(--neon-purple)]"
       />
     </div>

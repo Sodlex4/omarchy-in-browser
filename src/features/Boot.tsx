@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useOS } from "@/store/os";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 const lines = [
   "[ OK ] booting omarchy v1.0.0...",
@@ -20,6 +21,8 @@ export function Boot() {
   const [shown, setShown] = useState<string[]>([]);
   const ref = useRef<HTMLDivElement>(null);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasTriggeredRef = useRef(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     let i = 0;
@@ -47,14 +50,16 @@ export function Boot() {
   }, [shown]);
 
   const triggerBoot = () => {
+    if (hasTriggeredRef.current) return;
+    hasTriggeredRef.current = true;
     if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     setPressed([]);
     gsap.to(ref.current, {
       opacity: 0,
-      scale: 1.05,
-      filter: "blur(20px)",
-      duration: 0.6,
-      ease: "power2.in",
+      scale: reducedMotion ? 1 : 1.05,
+      filter: reducedMotion ? "none" : "blur(20px)",
+      duration: reducedMotion ? 0.15 : 0.6,
+      ease: "none",
       onComplete: () => setBooted(true),
     });
   };
@@ -62,6 +67,8 @@ export function Boot() {
   return (
     <div
       ref={ref}
+      role="status"
+      aria-live="polite"
       className="fixed inset-0 z-50 flex items-center justify-center bg-background scanline overflow-hidden"
     >
       <div className="absolute inset-0 bg-hero opacity-60" />
@@ -81,6 +88,7 @@ export function Boot() {
             return (
               <div
                 key={i}
+                aria-live={isPrompt ? "assertive" : "off"}
                 className={
                   isWelcome
                     ? "text-neon-green text-glow-green text-xl mt-4"

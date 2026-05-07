@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useOS, WORKSPACE_IDS, type WorkspaceId } from "@/store/os";
+import { OMARCHY_BANNER } from "@/data/banner";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { TopBar } from "./TopBar";
 import { Launcher } from "./Launcher";
 import { Terminal } from "./Terminal";
@@ -23,18 +25,6 @@ const dock = [
   { id: "install" as const, icon: Download, color: "var(--neon-pink)" },
 ];
 
-const BANNER = [
-  " ▄█████▄    ▄███████████▄    ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄",
-  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███",
-  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███",
-  "███   ███  ███   ███   ███ ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███",
-  "███   ███  ███   ███   ███ ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███",
-  "███   ███  ███   ███   ███  ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███",
-  "███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███",
-  " ▀█████▀    ▀█   ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀",
-  "                                      ███   █▀",
-];
-
 export function Desktop() {
   const workspaces = useOS((s) => s.workspaces);
   const currentWs = useOS((s) => s.currentWs);
@@ -44,6 +34,7 @@ export function Desktop() {
   const switchWorkspace = useOS((s) => s.switchWorkspace);
   const config = useOS((s) => s.config);
   const accentVar = `var(--neon-${config.accent})`;
+  const reducedMotion = useReducedMotion();
   const ws = workspaces[currentWs];
   const openApps = ws.openApps;
 
@@ -59,8 +50,20 @@ export function Desktop() {
     const tl = gsap.timeline();
     tl.fromTo(
       stageRef.current,
-      { x: dir * 60, opacity: 0, filter: "blur(12px)", scale: 0.98 },
-      { x: 0, opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.45, ease: "power3.out" },
+      {
+        x: dir * 60,
+        opacity: reducedMotion ? 1 : 0,
+        filter: reducedMotion ? "none" : "blur(12px)",
+        scale: reducedMotion ? 1 : 0.98,
+      },
+      {
+        x: 0,
+        opacity: 1,
+        filter: reducedMotion ? "none" : "blur(0px)",
+        scale: 1,
+        duration: reducedMotion ? 0.15 : 0.45,
+        ease: reducedMotion ? "none" : "power3.out",
+      },
     );
     prevWsRef.current = currentWs;
   }, [currentWs, lastWsDirection]);
@@ -76,7 +79,7 @@ export function Desktop() {
                 className="text-[1.3vw] md:text-[0.75rem] leading-[1.1] font-mono"
                 style={{ color: accentVar, textShadow: `0 0 30px ${accentVar}` }}
               >
-                {BANNER.join("\n")}
+                {OMARCHY_BANNER.join("\n")}
               </pre>
               <div className="mt-2 text-xs text-muted-foreground">
                 workspace <span className="text-foreground">{currentWs}</span> · empty
@@ -128,7 +131,8 @@ export function Desktop() {
               <button
                 key={id}
                 onClick={() => switchWorkspace(id)}
-                className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all"
+                aria-label={`Switch to workspace ${id}`}
+                className="h-7 w-7 rounded-md text-[11px] font-bold border transition-all hover:scale-110 cursor-pointer"
                 style={{
                   borderColor: active ? accentVar : "var(--border)",
                   color: active
@@ -156,6 +160,7 @@ export function Desktop() {
         <div className="flex items-center gap-1.5 p-1.5 rounded-2xl border border-border bg-card/80 backdrop-blur-md window-shadow">
           <button
             onClick={toggleLauncher}
+            aria-label="Open application launcher"
             className="h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all"
             style={{ background: "color-mix(in oklab, var(--accent) 20%, transparent)" }}
             title="Launcher (Super+Space or Alt+D)"
@@ -172,7 +177,8 @@ export function Desktop() {
               <button
                 key={d.id}
                 onClick={() => openApp(d.id)}
-                className="relative h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all hover:-translate-y-0.5"
+                aria-label={`Open ${d.id}`}
+                className="relative h-10 w-10 rounded-xl flex items-center justify-center border border-border hover:border-foreground/40 transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 style={{
                   color: d.color,
                   background: `color-mix(in oklab, ${d.color} 10%, transparent)`,
